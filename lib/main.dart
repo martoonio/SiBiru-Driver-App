@@ -13,15 +13,15 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await Permission.locationWhenInUse.isDenied.then((valueOfPermission) {
+  await Permission.locationWhenInUse.isDenied.then((valueOfPermission) async {
     if (valueOfPermission) {
-      Permission.locationWhenInUse.request();
+      await Permission.locationWhenInUse.request();
     }
   });
 
-  await Permission.notification.isDenied.then((valueOfPermission) {
+  await Permission.notification.isDenied.then((valueOfPermission) async {
     if (valueOfPermission) {
-      Permission.notification.request();
+      await Permission.notification.request();
     }
   });
 
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RideWave for Riders',
+      title: 'SiBiru Driver',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: whiteColor,

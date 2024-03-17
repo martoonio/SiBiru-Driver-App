@@ -19,10 +19,7 @@ int driverTripRequestTimeout = 20;
 
 Position? riderCurrentPosition;
 
-// String riderName = "";
-// String riderPhone = "";
-// String riderPhoto = "";
-// String riderFaculty = "";
-// String vehicleColor = "";
-// String vehicleModel = "";
-// String vehicleNumber = "";
+String prevHalte = "";
+String nextHalte = "";
+int capacity = 0;
+String route = "";
