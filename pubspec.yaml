@@ -44,6 +44,14 @@ dependencies:
   flutter_geofire: ^2.0.3
   http: ^1.2.0
   geolocator: ^11.0.0
+  flutter_native_splash: ^2.3.10
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+  color: "#ffffff"
+  image: assets/logo_portrait.png
 
 dev_dependencies:
   flutter_test:

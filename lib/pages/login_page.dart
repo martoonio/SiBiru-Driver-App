@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:sibiru_driver/pages/home_page.dart';
+import 'package:sibiru_driver/pages/route_page.dart';
 import '../methods/common_methods.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .child(userFirebase.uid);
 
       Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (c) => const HomePage()));
+                context, MaterialPageRoute(builder: (c) => const RoutePage()));
     } else {
       cMethods.displaySnackBar("Error Occured, can't Sign In.", context);
     }
@@ -81,12 +82,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: whiteColor,
-      body: SingleChildScrollView(
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Image.asset(
                   "assets/logo_sibiru.png",
