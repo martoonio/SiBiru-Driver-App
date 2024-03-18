@@ -1,88 +1,56 @@
+import "package:firebase_auth/firebase_auth.dart";
+import "package:firebase_database/firebase_database.dart";
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:sibiru_driver/constants.dart";
-import "package:sibiru_driver/pages/home_page.dart";
+import "package:sibiru_driver/global/global_var.dart";
 
-import "../global/global_var.dart";
+class RouteDialog extends StatefulWidget {
+  const RouteDialog({Key? key}) : super(key: key);
 
-class RoutePage extends StatefulWidget {
-  const RoutePage({Key? key}) : super(key: key);
-
-  @override
-  _RoutePageState createState() => _RoutePageState();
+  State<RouteDialog> createState() => _RouteDialogState();
 }
 
-class _RoutePageState extends State<RoutePage> {
+class _RouteDialogState extends State<RouteDialog> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kPrimaryColor,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.chevron_left, color: whiteColor),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        elevation: 3,
-        backgroundColor: kPrimaryColor,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 5.0,
-                  spreadRadius: 0.5,
-                  offset: Offset(
-                    0.7,
-                    0.7,
-                  ),
-                ),
-              ],
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[
-                  kPrimaryColor,
-                  kSecondaryColor,
-                ],
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(8))),
-        ),
-        title: Image.asset(
-          "assets/sibiru_driver.png",
-          height: 50,
-        ),
-        centerTitle: true,
-        shadowColor: Colors.black54,
+
+    return Dialog(
+      alignment: Alignment.center,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                  "Silakan Pilih Shuttle",
-                  style: GoogleFonts.montserrat(
-                    color: whiteColor,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  )
-                ),
-              const SizedBox(height: 20),
-              Row(
+      backgroundColor: kPrimaryColor,
+      elevation: 3,
+      shadowColor: Colors.black54,
+      child: Container(
+        // padding: const EdgeInsets.all(20),
+        height: 300,
+        // width: 300,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              height: 200,
+              width: 300,
+              child: Column(
+                children: [
+                  Text(
+                    "Pilih Shuttle",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 35),
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
                         onPressed: () {
                           saveRoute("Blue", shuttleInfo);
-                          Navigator.pushReplacement(
-                            context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                  const HomePage()));
+                          Navigator.pop(context);
                           setState(() {
                             shuttle = "Blue";
                           });
@@ -112,15 +80,11 @@ class _RoutePageState extends State<RoutePage> {
                       ElevatedButton(
                         onPressed: () {
                           saveRoute("Grey", shuttleInfo);
-                          Navigator.pushReplacement(
-                            context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                  const HomePage()));
-
+                          Navigator.pop(context);
                           setState(() {
                             shuttle = "Grey";
                           });
+                          print(shuttle);
                         },
                         style: ElevatedButton.styleFrom(
                           primary: whiteColor,
@@ -146,8 +110,33 @@ class _RoutePageState extends State<RoutePage> {
                       ),
                     ],
                   ),
-            ],
-          ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 100,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.red,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  "BATAL",
+                  style: GoogleFonts.montserrat(
+                    color: whiteColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

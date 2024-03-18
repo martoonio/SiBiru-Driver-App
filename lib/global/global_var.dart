@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 
 String userName = "";
@@ -23,3 +25,15 @@ String prevHalte = "";
 String nextHalte = "";
 int capacity = 0;
 String route = "";
+String shuttle = "";
+
+DatabaseReference shuttleInfo = FirebaseDatabase.instance
+      .ref()
+      .child("shuttleData")
+      .child(FirebaseAuth.instance.currentUser!.uid);
+
+saveRoute(String route, DatabaseReference shuttleInfo) {
+      shuttleInfo.update({
+        "route": route,
+      });
+    }

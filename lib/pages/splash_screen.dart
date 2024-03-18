@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:sibiru_driver/constants.dart';
 import 'package:sibiru_driver/pages/home_page.dart';
 import 'package:sibiru_driver/pages/login_page.dart';
+import 'package:sibiru_driver/pages/route_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const HomePage(),
+              builder: (context) => const RoutePage(),
             ),
           );
         } else {
@@ -39,7 +40,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Timer? timer;
 
     return Scaffold(
       backgroundColor: kPrimaryColor,
