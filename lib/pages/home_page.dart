@@ -52,7 +52,6 @@ class _HomePageState extends State<HomePage> {
   int nextHalteIndex = 0;
 
   final List<String?> listHalte = [
-    null,
     "Gerbang Utama",
     "Labtek 1B",
     "GKU 2",
