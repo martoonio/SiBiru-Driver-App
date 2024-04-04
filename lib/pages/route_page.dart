@@ -18,12 +18,7 @@ class _RoutePageState extends State<RoutePage> {
     return Scaffold(
       backgroundColor: kPrimaryColor,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.chevron_left, color: whiteColor),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
         elevation: 3,
         backgroundColor: kPrimaryColor,
         flexibleSpace: Container(

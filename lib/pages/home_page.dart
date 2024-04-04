@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sibiru_driver/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sibiru_driver/pages/route_page.dart';
-import 'package:slide_to_act/slide_to_act.dart';
 
 import '../global/global_var.dart';
 
@@ -325,10 +322,96 @@ class _HomePageState extends State<HomePage> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const RoutePage()));
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) => Dialog(
+                                backgroundColor: kSecondaryColor,
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  height: 300,
+                                  width: 400,
+                                  child: Center(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text(
+                                          "Konfirmasi",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Text(
+                                          "Ingin mengganti shuttle?",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  elevation: 2,
+                                                  fixedSize: Size(120, 20)),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text("Tidak",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  )),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: kPrimaryColor,
+                                                  elevation: 2,
+                                                  fixedSize: Size(120, 20)),
+                                              onPressed: () {
+                                                goOfflineNow();
+                                                setState(() {
+                                                  setState(() {
+                                                    colorToShow = kPrimaryColor;
+                                                    titleToShow = "GO ONLINE NOW";
+                                                    isDriverAvailable = false;
+                                                  });
+                                                });
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const RoutePage(),
+                                                  ),
+                                                );
+                                              },
+                                              child: Text("Ya",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  )),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          
                           },
                           style: ButtonStyle(
                             elevation: MaterialStateProperty.all<double>(3),
@@ -719,7 +802,8 @@ class _HomePageState extends State<HomePage> {
                                 if (value == true) {
                                   showModalBottomSheet(
                                     context: context,
-                                    builder: (BuildContext context) => Container(
+                                    builder: (BuildContext context) =>
+                                        Container(
                                       height: 200,
                                       color: kPrimaryColor,
                                       padding: const EdgeInsets.all(20),
@@ -750,21 +834,26 @@ class _HomePageState extends State<HomePage> {
                                                     "BATAL",
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: Colors.red,
                                                     ),
                                                   ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    primary:
-                                                        Colors.red.withOpacity(0.3),
-                                                    shape: RoundedRectangleBorder(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    primary: Colors.red
+                                                        .withOpacity(0.3),
+                                                    shape:
+                                                        RoundedRectangleBorder(
                                                       borderRadius:
-                                                          BorderRadius.circular(20),
+                                                          BorderRadius.circular(
+                                                              20),
                                                       side: const BorderSide(
                                                           color: Colors.red,
                                                           width: 2),
                                                     ),
-                                                    fixedSize: const Size(100, 40),
+                                                    fixedSize:
+                                                        const Size(100, 40),
                                                   ),
                                                 ),
                                                 ElevatedButton(
@@ -783,17 +872,22 @@ class _HomePageState extends State<HomePage> {
                                                     "YA",
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: whiteColor,
                                                     ),
                                                   ),
-                                                  style: ElevatedButton.styleFrom(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
                                                     primary: Colors.green,
-                                                    shape: RoundedRectangleBorder(
+                                                    shape:
+                                                        RoundedRectangleBorder(
                                                       borderRadius:
-                                                          BorderRadius.circular(20),
+                                                          BorderRadius.circular(
+                                                              20),
                                                     ),
-                                                    fixedSize: const Size(100, 40),
+                                                    fixedSize:
+                                                        const Size(100, 40),
                                                   ),
                                                 ),
                                               ],
