@@ -64,8 +64,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       nextHalteIndex = (nextHalteIndex + 1) % listHalte.length;
       shuttleInfo.update({
-        "nextHalte": listHalte[nextHalteIndex],
-        "prevHalte": listHalte[nextHalteIndex - 1],
+        "halte" : listHalte[nextHalteIndex + 1],
         "countMhs": passengerCount,
       });
     });
@@ -75,8 +74,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       nextHalteIndex = (nextHalteIndex - 1) % listHalte.length;
       shuttleInfo.update({
-        "nextHalte": listHalte[nextHalteIndex],
-        "prevHalte": listHalte[nextHalteIndex + 1],
+        "halte" : listHalte[nextHalteIndex + 1],
         "countMhs": passengerCount,
       });
     });
@@ -946,8 +944,8 @@ class _HomePageState extends State<HomePage> {
                   ? () {
                       navigateToPrev();
                       setState(() {
-                        nextHalteDisplay = listHalte[nextHalteIndex]!;
-                        prevHalteDisplay = listHalte[nextHalteIndex + 1]!;
+                        nextHalteDisplay = listHalte[nextHalteIndex - 1]!;
+                        prevHalteDisplay = listHalte[nextHalteIndex]!;
                       });
                     }
                   : null,
@@ -980,8 +978,8 @@ class _HomePageState extends State<HomePage> {
                   ? () {
                       navigateToNext();
                       setState(() {
-                        nextHalteDisplay = listHalte[nextHalteIndex]!;
-                        prevHalteDisplay = listHalte[nextHalteIndex - 1]!;
+                        nextHalteDisplay = listHalte[nextHalteIndex + 1]!;
+                        prevHalteDisplay = listHalte[nextHalteIndex]!;
                       });
                     }
                   : null,
