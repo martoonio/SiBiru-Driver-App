@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:sibiru_driver/constants.dart';
 import 'package:sibiru_driver/pages/home_page.dart';
 import 'package:sibiru_driver/pages/login_page.dart';
 import 'package:sibiru_driver/pages/route_page.dart';
+
+import '../global/global_var.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

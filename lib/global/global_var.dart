@@ -21,11 +21,10 @@ int driverTripRequestTimeout = 20;
 
 Position? riderCurrentPosition;
 
-String prevHalte = "";
-String nextHalte = "";
-int capacity = 0;
 String route = "";
 String shuttle = "";
+String halte = "";
+bool isFull = false;
 
 DatabaseReference shuttleInfo = FirebaseDatabase.instance
       .ref()
@@ -37,3 +36,9 @@ saveRoute(String route, DatabaseReference shuttleInfo) {
         "route": route,
       });
     }
+
+void setStatus(String status) {
+    shuttleInfo.update({
+      "status": status,
+    });
+  }

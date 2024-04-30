@@ -1,3 +1,4 @@
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sibiru_driver/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sibiru_driver/pages/route_page.dart';
+import 'package:vibration/vibration.dart';
 
+import '../back_service/back_services.dart';
 import '../global/global_var.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,30 +24,15 @@ class _HomePageState extends State<HomePage> {
   Color colorToShow = kPrimaryColor;
   String titleToShow = "GO ONLINE NOW";
   bool isDriverAvailable = false;
-  DatabaseReference? newTripRequestReference;
-  int passengerCount = 0;
+  bool isFull = false;
 
-  String prevHalteDisplay = "Silakan klik Jalan";
-  String nextHalteDisplay = "";
+  String prevHalteDisplay = "Gerbang Utama";
+  String nextHalteDisplay = "Labtek 1B";
 
   DatabaseReference shuttleInfo = FirebaseDatabase.instance
       .ref()
       .child("shuttleData")
       .child(FirebaseAuth.instance.currentUser!.uid);
-
-  void _incrementPassengerCount() {
-    setState(() {
-      passengerCount++;
-    });
-  }
-
-  void _decrementPassengerCount() {
-    if (passengerCount > 0) {
-      setState(() {
-        passengerCount--;
-      });
-    }
-  }
 
   int nextHalteIndex = 0;
 
@@ -52,20 +40,25 @@ class _HomePageState extends State<HomePage> {
     "Gerbang Utama",
     "Labtek 1B",
     "GKU 2",
-    "GKU 1",
+    "GKU 1A",
     "Rektorat",
-    "Koica / GKU 3",
+    "Koica",
     "GSG",
-    "Asrama",
+    "GKU 1B",
     "Parkiran Kehutanan"
   ];
 
   void navigateToNext() {
     setState(() {
       nextHalteIndex = (nextHalteIndex + 1) % listHalte.length;
+      if (nextHalteIndex > 8) {
+        nextHalteIndex = 0;
+      } else if (nextHalteIndex < 0) {
+        nextHalteIndex = 8;
+      }
       shuttleInfo.update({
-        "halte" : listHalte[nextHalteIndex + 1],
-        "countMhs": passengerCount,
+        "halte": listHalte[nextHalteIndex],
+        // "status": isFull ? "full" : "available",
       });
     });
   }
@@ -73,9 +66,14 @@ class _HomePageState extends State<HomePage> {
   navigateToPrev() {
     setState(() {
       nextHalteIndex = (nextHalteIndex - 1) % listHalte.length;
+      if (nextHalteIndex < 0) {
+        nextHalteIndex = 8;
+      } else if (nextHalteIndex > 8) {
+        nextHalteIndex = 0;
+      }
       shuttleInfo.update({
-        "halte" : listHalte[nextHalteIndex + 1],
-        "countMhs": passengerCount,
+        "halte": listHalte[nextHalteIndex],
+        // "status": isFull  ? "full" : "available",
       });
     });
   }
@@ -135,40 +133,23 @@ class _HomePageState extends State<HomePage> {
   //   notificationSystem.startListeningForNewNotification(context);
   // }
 
-  retrieveCurrentDriverInfo() async {
-    await FirebaseDatabase.instance
-        .ref()
-        .child("shuttleData")
-        .child(FirebaseAuth.instance.currentUser!.uid)
-        .once()
-        .then((snap) {
-      prevHalte = (snap.snapshot.value as Map)["prevHalte"];
-      nextHalte = (snap.snapshot.value as Map)["nextHalte"];
-      capacity = (snap.snapshot.value as Map)["countMhs"];
-      route = (snap.snapshot.value as Map)["route"];
-    });
-  }
-
-  _initializeDriverInfo() async {
-    await retrieveCurrentDriverInfo();
-    setState(() {});
-  }
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getCurrentLiveLocationOfDriver();
-    _initializeDriverInfo();
     isDriverAvailable = false;
+    nextHalteIndex = 1;
   }
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         elevation: 3,
-        backgroundColor: Colors.white,
+        backgroundColor: isDriverAvailable ? whiteColor : Colors.black,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
               boxShadow: [
@@ -196,9 +177,142 @@ class _HomePageState extends State<HomePage> {
           "assets/sibiru_driver.png",
           height: 50,
         ),
-        centerTitle: true,
+        centerTitle: false,
         shadowColor: Colors.black54,
         automaticallyImplyLeading: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) => Dialog(
+                                backgroundColor: kSecondaryColor,
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  height: 300,
+                                  width: 400,
+                                  child: Center(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Text(
+                                          "Konfirmasi",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Text(
+                                          "Ingin mengganti shuttle?",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  elevation: 2,
+                                                  fixedSize: Size(120, 20)),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text("Tidak",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  )),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      kPrimaryColor,
+                                                  elevation: 2,
+                                                  fixedSize: Size(120, 20)),
+                                              onPressed: () {
+                                                goOfflineNow();
+                                                setState(() {
+                                                  setState(() {
+                                                    colorToShow = kPrimaryColor;
+                                                    titleToShow =
+                                                        "GO ONLINE NOW";
+                                                    isDriverAvailable = false;
+                                                  });
+                                                  FlutterBackgroundService()
+                                                      .invoke("stopService");
+                                                });
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const RoutePage(),
+                                                  ),
+                                                );
+                                              },
+                                              child: Text("Ya",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  )),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          style: ButtonStyle(
+                            elevation: MaterialStateProperty.all<double>(3),
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                whiteColor
+                            ),
+                            shape: MaterialStateProperty.all<
+                                RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            fixedSize : MaterialStateProperty.all<Size>(
+                              const Size(20, 20),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image(
+                                image: AssetImage(shuttle == "Grey"
+                                    ? "assets/shuttle abu.png"
+                                    : "assets/shuttle biru.png"),
+                                height: 20,
+                                width: 20,
+                              ),
+                            ],
+                          ),
+                        )
+          ),
+        ],
       ),
       body: Stack(children: [
         SingleChildScrollView(
@@ -227,22 +341,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
+                    child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Image(
-                                      image:
-                                          AssetImage("assets/Icon Halte.png"),
+                                      image: AssetImage("assets/current.png"),
                                       height: 50,
                                       width: 50,
                                     ),
@@ -255,7 +365,7 @@ class _HomePageState extends State<HomePage> {
                                         Text(
                                           "Halte saat ini",
                                           style: GoogleFonts.poppins(
-                                            fontSize: 10,
+                                            fontSize: 6,
                                             fontWeight: FontWeight.normal,
                                             color: kPrimaryColor,
                                           ),
@@ -263,7 +373,7 @@ class _HomePageState extends State<HomePage> {
                                         Text(
                                           prevHalteDisplay,
                                           style: GoogleFonts.poppins(
-                                            fontSize: 17,
+                                            fontSize: 11,
                                             fontWeight: FontWeight.bold,
                                             color: kPrimaryColor,
                                           ),
@@ -272,6 +382,199 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ],
                                 ),
+                                Switch(
+                                      value: isDriverAvailable,
+                                      activeColor: whiteColor,
+                                      activeTrackColor: Colors.green,
+                                      inactiveThumbColor: whiteColor,
+                                      inactiveTrackColor: Colors.red,
+                                      onChanged: (value) {
+                                        if (value == true) {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            builder: (BuildContext context) => Container(
+                                              height: 200,
+                                              color: kPrimaryColor,
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(20.0),
+                                                    child: Text(
+                                                      "Anda yakin ingin online?",
+                                                      style: GoogleFonts.montserrat(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: whiteColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(20.0),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(context);
+                                                          },
+                                                          child: Text(
+                                                            "BATAL",
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 15,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: Colors.red,
+                                                            ),
+                                                          ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            primary: Colors.red.withOpacity(0.3),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                              side: const BorderSide(
+                                                                  color: Colors.red, width: 2),
+                                                            ),
+                                                            fixedSize: const Size(100, 40),
+                                                          ),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(context);
+                                                            goOnlineNow();
+                                                            setAndGetLocationUpdates();
+                                                            setState(() {
+                                                              colorToShow = Colors.red;
+                                                              titleToShow = "GO OFFLINE NOW";
+                                                              isDriverAvailable = true;
+                                                            });
+                                                            final service = FlutterBackgroundService();
+                                                            service.configure(
+                                                              androidConfiguration:
+                                                                  AndroidConfiguration(
+                                                                autoStart: true,
+                                                                isForegroundMode: true,
+                                                                onStart: onStart,
+                                                              ),
+                                                              iosConfiguration: IosConfiguration(
+                                                                autoStart: true,
+                                                                onForeground: onStart,
+                                                              ),
+                                                            );
+                                                            service.startService();
+                                                          },
+                                                          child: Text(
+                                                            "YA",
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 15,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: whiteColor,
+                                                            ),
+                                                          ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            primary: Colors.green,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                            ),
+                                                            fixedSize: const Size(100, 40),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            builder: (BuildContext context) => Container(
+                                              height: 200,
+                                              color: kPrimaryColor,
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(20.0),
+                                                    child: Text(
+                                                      "Anda yakin ingin offline?",
+                                                      style: GoogleFonts.montserrat(
+                                                        fontSize: 20,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: whiteColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(20.0),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(context);
+                                                          },
+                                                          child: Text(
+                                                            "BATAL",
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 15,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: Colors.red,
+                                                            ),
+                                                          ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            primary: Colors.red.withOpacity(0.3),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                              side: const BorderSide(
+                                                                  color: Colors.red, width: 2),
+                                                            ),
+                                                            fixedSize: const Size(100, 40),
+                                                          ),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(context);
+                                                            goOfflineNow();
+                                                            setState(() {
+                                                              colorToShow = kPrimaryColor;
+                                                              titleToShow = "GO ONLINE NOW";
+                                                              isDriverAvailable = false;
+                                                            });
+                                                            FlutterBackgroundService()
+                                                                .invoke("stopService");
+                                                          },
+                                                          child: Text(
+                                                            "YA",
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 15,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: whiteColor,
+                                                            ),
+                                                          ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            primary: Colors.green,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                            ),
+                                                            fixedSize: const Size(100, 40),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                          // goOfflineNow();
+                                          // setState(() {
+                                          //   colorToShow = kPrimaryColor;
+                                          //   titleToShow = "GO ONLINE NOW";
+                                          //   isDriverAvailable = false;
+                                          // });
+                                        }
+                                      },
+                                    ),
                               ],
                             ),
                             const SizedBox(
@@ -297,7 +600,7 @@ class _HomePageState extends State<HomePage> {
                                         Text(
                                           "Halte selanjutnya",
                                           style: GoogleFonts.poppins(
-                                            fontSize: 10,
+                                            fontSize: 11,
                                             fontWeight: FontWeight.normal,
                                             color: kPrimaryColor,
                                           ),
@@ -305,160 +608,20 @@ class _HomePageState extends State<HomePage> {
                                         Text(
                                           nextHalteDisplay,
                                           style: GoogleFonts.poppins(
-                                            fontSize: 17,
+                                            fontSize: 24,
                                             fontWeight: FontWeight.bold,
                                             color: kPrimaryColor,
                                           ),
                                         ),
                                       ],
-                                    )
+                                    ),
+                                    
                                   ],
                                 )
                               ],
                             ),
                           ],
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) => Dialog(
-                                backgroundColor: kSecondaryColor,
-                                child: Container(
-                                  padding: const EdgeInsets.all(20),
-                                  height: 300,
-                                  width: 400,
-                                  child: Center(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Text(
-                                          "Konfirmasi",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: 20,
-                                        ),
-                                        Text(
-                                          "Ingin mengganti shuttle?",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.normal,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: 20,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.red,
-                                                  elevation: 2,
-                                                  fixedSize: Size(120, 20)),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text("Tidak",
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  )),
-                                            ),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor: kPrimaryColor,
-                                                  elevation: 2,
-                                                  fixedSize: Size(120, 20)),
-                                              onPressed: () {
-                                                goOfflineNow();
-                                                setState(() {
-                                                  setState(() {
-                                                    colorToShow = kPrimaryColor;
-                                                    titleToShow = "GO ONLINE NOW";
-                                                    isDriverAvailable = false;
-                                                  });
-                                                });
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => const RoutePage(),
-                                                  ),
-                                                );
-                                              },
-                                              child: Text("Ya",
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  )),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          
-                          },
-                          style: ButtonStyle(
-                            elevation: MaterialStateProperty.all<double>(3),
-                            padding: MaterialStateProperty.all<EdgeInsets>(
-                              const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                            ),
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              whiteColor,
-                            ),
-                            shape: MaterialStateProperty.all<
-                                RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            minimumSize: MaterialStateProperty.all<Size>(
-                              const Size(20, 20),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Image(
-                                image: AssetImage(shuttle == "Grey"
-                                    ? "assets/shuttle abu.png"
-                                    : "assets/shuttle biru.png"),
-                                height: 20,
-                                width: 20,
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Text(
-                                shuttle == "Grey" ? "Abu" : "Biru",
-                                style: GoogleFonts.montserrat(
-                                  color: shuttle == "Grey"
-                                      ? Colors.grey
-                                      : kPrimaryColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
                   ),
                 ),
                 const SizedBox(
@@ -474,289 +637,110 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Text(
-                        "Penumpang",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: kPrimaryColor,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          boxShadow: List<BoxShadow>.generate(
-                              3,
-                              (index) => BoxShadow(
-                                    color: kPrimaryColor.withOpacity(0.5),
-                                    blurRadius: 3.0,
-                                    spreadRadius: 0.5,
-                                    offset: const Offset(
-                                      0.7,
-                                      0.7,
-                                    ),
-                                  )),
-                          color: whiteColor,
-                          borderRadius: BorderRadius.circular(40),
-                          backgroundBlendMode: BlendMode.darken,
-                          border: Border.all(
+                        "Kapasitas",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
                             color: kPrimaryColor,
-                            width: 2,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              onPressed: (passengerCount > 0)
-                                  ? _decrementPassengerCount
-                                  : null,
-                              enableFeedback: true,
-                            ),
-                            Text(
-                              "$passengerCount",
-                              style: const TextStyle(fontSize: 34),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: _incrementPassengerCount,
-                            ),
-                          ],
-                        ),
+                          )
                       ),
                       const SizedBox(
-                        height: 10,
+                        height: 20,
                       ),
-                      ElevatedButton(
-                        onPressed: (passengerCount > 0)
-                            ? () {
-                                setState(() {
-                                  passengerCount = 0;
-                                });
-                              }
-                            : null,
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(
-                            (passengerCount > 0)
-                                ? kPrimaryColor
-                                : Colors.grey.withOpacity(0.5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Vibration.vibrate(duration: 100);
+                              setStatus("available");
+                              setState(() {
+                                isFull = false;
+                              });
+                            },
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all<double>(isFull ? 1 : 3),
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                isFull ? whiteColor : Colors.green,
+                              ),
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              fixedSize: MaterialStateProperty.all<Size>(
+                                Size(width * 0.4, height * 0.2),
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  size: 55,
+                                  color: isFull ? Colors.green : whiteColor,
+                                ),
+                                Text(
+                                  "Tersedia",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: isFull
+                                        ? FontWeight.normal
+                                        : FontWeight.bold,
+                                    color: isFull ? Colors.green : whiteColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          "Reset",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                          ElevatedButton(
+                            onPressed: () {
+                              Vibration.vibrate(duration: 100);
+                              setStatus("full");
+                              setState(() {
+                                isFull = true;
+                              });
+                            },
+                            style: ButtonStyle(
+                              elevation: MaterialStateProperty.all<double>(isFull ? 3 : 1),
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                isFull ? Colors.red : whiteColor,
+                              ),
+                              shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              fixedSize: MaterialStateProperty.all<Size>(
+                                Size(width * 0.4, height * 0.2),
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person_off,
+                                  size: 55,
+                                  color: isFull ? whiteColor : Colors.red,
+                                ),
+                                Text(
+                                  "Penuh",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isFull ? whiteColor : Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       )
                     ],
                   ),
                 ),
-                const SizedBox(
-                  height: 50,
-                ),
-                Column(
-                  children: [
-                    Switch(
-                      value: isDriverAvailable,
-                      activeColor: kPrimaryColor,
-                      activeTrackColor: kPrimaryLightColor,
-                      inactiveThumbColor: kPrimaryColor,
-                      inactiveTrackColor: kPrimaryLightColor,
-                      onChanged: (value) {
-                        if (value == true) {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext context) => Container(
-                              height: 200,
-                              color: kPrimaryColor,
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Text(
-                                      "Anda yakin ingin online?",
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: whiteColor,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(
-                                            "BATAL",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            primary:
-                                                Colors.red.withOpacity(0.3),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              side: const BorderSide(
-                                                  color: Colors.red, width: 2),
-                                            ),
-                                            fixedSize: const Size(100, 40),
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            goOnlineNow();
-                                            setAndGetLocationUpdates();
-                                            setState(() {
-                                              colorToShow = Colors.red;
-                                              titleToShow = "GO OFFLINE NOW";
-                                              isDriverAvailable = true;
-                                            });
-                                          },
-                                          child: Text(
-                                            "YA",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: whiteColor,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            primary: Colors.green,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            fixedSize: const Size(100, 40),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        } else {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext context) => Container(
-                              height: 200,
-                              color: kPrimaryColor,
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Text(
-                                      "Anda yakin ingin offline?",
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: whiteColor,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(
-                                            "BATAL",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            primary:
-                                                Colors.red.withOpacity(0.3),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              side: const BorderSide(
-                                                  color: Colors.red, width: 2),
-                                            ),
-                                            fixedSize: const Size(100, 40),
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            goOfflineNow();
-                                            setState(() {
-                                              colorToShow = kPrimaryColor;
-                                              titleToShow = "GO ONLINE NOW";
-                                              isDriverAvailable = false;
-                                            });
-                                          },
-                                          child: Text(
-                                            "YA",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: whiteColor,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            primary: Colors.green,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            fixedSize: const Size(100, 40),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                          // goOfflineNow();
-                          // setState(() {
-                          //   colorToShow = kPrimaryColor;
-                          //   titleToShow = "GO ONLINE NOW";
-                          //   isDriverAvailable = false;
-                          // });
-                        }
-                      },
-                    ),
-                    Text(
-                      titleToShow,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: colorToShow,
-                      ),
-                    ),
-                  ],
-                )
               ],
             ),
           ),
@@ -788,14 +772,17 @@ class _HomePageState extends State<HomePage> {
                             color: whiteColor,
                           ),
                         ),
+                        const SizedBox(
+                          height: 20,
+                        ),
                         Column(
                           children: [
                             Switch(
                               value: isDriverAvailable,
                               activeColor: kPrimaryColor,
                               activeTrackColor: kPrimaryLightColor,
-                              inactiveThumbColor: kPrimaryColor,
-                              inactiveTrackColor: kPrimaryLightColor,
+                              inactiveThumbColor: whiteColor,
+                              inactiveTrackColor: Colors.red,
                               onChanged: (value) {
                                 if (value == true) {
                                   showModalBottomSheet(
@@ -865,6 +852,22 @@ class _HomePageState extends State<HomePage> {
                                                           "GO OFFLINE NOW";
                                                       isDriverAvailable = true;
                                                     });
+                                                    final service =
+                                                        FlutterBackgroundService();
+                                                    service.configure(
+                                                      androidConfiguration:
+                                                          AndroidConfiguration(
+                                                        autoStart: true,
+                                                        isForegroundMode: true,
+                                                        onStart: onStart,
+                                                      ),
+                                                      iosConfiguration:
+                                                          IosConfiguration(
+                                                        autoStart: true,
+                                                        onForeground: onStart,
+                                                      ),
+                                                    );
+                                                    service.startService();
                                                   },
                                                   child: Text(
                                                     "YA",
@@ -902,6 +905,8 @@ class _HomePageState extends State<HomePage> {
                                     titleToShow = "GO ONLINE NOW";
                                     isDriverAvailable = false;
                                   });
+                                  FlutterBackgroundService()
+                                      .invoke("stopService");
                                 }
                               },
                             ),
@@ -910,7 +915,7 @@ class _HomePageState extends State<HomePage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: colorToShow,
+                                color: Colors.red,
                               ),
                             ),
                           ],
@@ -922,40 +927,48 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ]),
-      bottomNavigationBar: Row(
+      bottomNavigationBar: isDriverAvailable ? Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Expanded(
-            child: ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                  isDriverAvailable ? kSecondaryColor : Colors.black54,
-                ),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                ),
-                fixedSize: MaterialStateProperty.all<Size>(
-                  const Size(double.infinity, 85),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(
+                isDriverAvailable ? kSecondaryColor : Colors.black54,
+              ),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0),
                 ),
               ),
-              onPressed: isDriverAvailable
-                  ? () {
-                      navigateToPrev();
-                      setState(() {
-                        nextHalteDisplay = listHalte[nextHalteIndex - 1]!;
-                        prevHalteDisplay = listHalte[nextHalteIndex]!;
-                      });
-                    }
-                  : null,
-              child: Text(
-                "Kembali",
-                style: GoogleFonts.montserrat(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDriverAvailable ? Colors.white : Colors.grey,
-                ),
+              fixedSize: MaterialStateProperty.all<Size>(
+                Size(width*0.3, height*0.17),
+              ),
+            ),
+            onPressed: isDriverAvailable
+                ? () {
+                  Vibration.vibrate(duration: 100);
+                    navigateToPrev();
+                    setState(() {
+                      if (nextHalteIndex < 0) {
+                        nextHalteIndex = 8;
+                        nextHalteDisplay = listHalte[nextHalteIndex]!;
+                        prevHalteDisplay = listHalte[0]!;
+                      } else if (nextHalteIndex == 0) {
+                        nextHalteDisplay = listHalte[nextHalteIndex]!;
+                        prevHalteDisplay = listHalte[8]!;
+                      } else {
+                        nextHalteDisplay = listHalte[nextHalteIndex]!;
+                        prevHalteDisplay = listHalte[nextHalteIndex - 1]!;
+                      }
+                    });
+                  }
+                : null,
+            child: Text(
+              "Kembali",
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDriverAvailable ? Colors.white : Colors.grey,
               ),
             ),
           ),
@@ -971,22 +984,32 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 fixedSize: MaterialStateProperty.all<Size>(
-                  const Size(double.infinity, 85),
+                  Size(200, height*0.17),
                 ),
               ),
               onPressed: isDriverAvailable
                   ? () {
+                    Vibration.vibrate(duration: 100);
                       navigateToNext();
                       setState(() {
-                        nextHalteDisplay = listHalte[nextHalteIndex + 1]!;
-                        prevHalteDisplay = listHalte[nextHalteIndex]!;
+                        if (nextHalteIndex > 8) {
+                          nextHalteIndex = 0;
+                          nextHalteDisplay = listHalte[nextHalteIndex]!;
+                          prevHalteDisplay = listHalte[8]!;
+                        } else if (nextHalteIndex == 0) {
+                          nextHalteDisplay = listHalte[nextHalteIndex]!;
+                          prevHalteDisplay = listHalte[8]!;
+                        } else {
+                          nextHalteDisplay = listHalte[nextHalteIndex]!;
+                          prevHalteDisplay = listHalte[nextHalteIndex - 1]!;
+                        }
                       });
                     }
                   : null,
               child: Text(
                 "Jalan",
                 style: GoogleFonts.montserrat(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: isDriverAvailable ? Colors.white : Colors.grey,
                 ),
@@ -994,7 +1017,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
-      ),
+      ) : null,
     );
   }
 }

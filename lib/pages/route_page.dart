@@ -58,89 +58,101 @@ class _RoutePageState extends State<RoutePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                  "Silakan Pilih Shuttle",
+              Text("Silakan Pilih Shuttle",
                   style: GoogleFonts.montserrat(
                     color: whiteColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                  )
-                ),
+                  )),
               const SizedBox(height: 20),
               Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          saveRoute("Blue", shuttleInfo);
-                          Navigator.pushReplacement(
-                            context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                  const HomePage()));
-                          setState(() {
-                            shuttle = "Blue";
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          primary: whiteColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      saveRoute("Blue", shuttleInfo);
+                      shuttleInfo.update({
+                        "halte": "Labtek 1B",
+                      });
+                      setStatus("available");
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const HomePage()));
+                      setState(() {
+                        shuttle = "Blue";
+                        isFull = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: whiteColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Image(
+                            image: AssetImage("assets/shuttle biru.png"),
+                            height: 40),
+                        const SizedBox(height: 5),
+                        Text(
+                          "Biru",
+                          style: GoogleFonts.montserrat(
+                            color: kPrimaryColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            Image(image: AssetImage("assets/shuttle biru.png"), height: 40),
-                            const SizedBox(height: 5),
-                            Text(
-                              "Biru",
-                              style: GoogleFonts.montserrat(
-                                color: kPrimaryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          saveRoute("Grey", shuttleInfo);
-                          Navigator.pushReplacement(
-                            context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                  const HomePage()));
-
-                          setState(() {
-                            shuttle = "Grey";
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          primary: whiteColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Image(image: AssetImage("assets/shuttle abu.png"), height: 40),
-                            const SizedBox(height: 5),
-                            Text(
-                              "Abu",
-                              style: GoogleFonts.montserrat(
-                                color: Colors.grey,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  ElevatedButton(
+                    onPressed: () {
+                      saveRoute("Grey", shuttleInfo);
+                      shuttleInfo.update({
+                        "halte": "Labtek 1B",
+                      });
+                      setStatus("available");
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const HomePage()));
+
+                      setState(() {
+                        shuttle = "Grey";
+                        isFull = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: whiteColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Image(
+                            image: AssetImage("assets/shuttle abu.png"),
+                            height: 40),
+                        const SizedBox(height: 5),
+                        Text(
+                          "Abu",
+                          style: GoogleFonts.montserrat(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
