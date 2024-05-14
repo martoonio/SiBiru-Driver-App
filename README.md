@@ -1,3 +1,5 @@
+![Alt text](https://github.com/martoonio/SiBiru-Driver-App/blob/main/assets/logo_sibiru.png?raw=true)
+
 # SiBiru Driver App
 
 SiBiru ITB Shuttle Tracker, dengan nama panggilan "SiBiru," merupakan sebuah platform layanan berbasis teknologi informasi yang didesain untuk meningkatkan efisiensi dan ketersediaan layanan transportasi shuttle di lingkungan kampus Institut Teknologi Bandung (ITB). Platform ini adalah inovasi terbaru dalam layanan mobilitas di lingkungan kampus. 
